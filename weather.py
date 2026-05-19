@@ -3,8 +3,11 @@ weather.py — Day 1: Basic Weather App
 """
 
 import requests
+from dotenv import load_dotenv
+import os
 
-API_KEY = "0ee53f3d3026a1ba864c3e6396d52b5e"
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
 
