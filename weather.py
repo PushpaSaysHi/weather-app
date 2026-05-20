@@ -1,63 +1,85 @@
 """
-weather.py — Day 1: Basic Weather App
+weather.py — Day 2: Minimal Clean Style
 """
 
 import requests
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from rich.console import Console
+from rich.text import Text
 
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY  = os.getenv("API_KEY")
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+console  = Console()
 
 
-def get_weather(city):
+def get_weather_emoji(condition: str) -> str:
+    condition = condition.lower()
+    if "clear" in condition:       return "☀️"
+    elif "cloud" in condition:     return "⛅"
+    elif "rain" in condition:      return "🌧️"
+    elif "drizzle" in condition:   return "🌦️"
+    elif "thunder" in condition:   return "⛈️"
+    elif "snow" in condition:      return "❄️"
+    elif "mist" in condition:      return "🌫️"
+    elif "fog" in condition:       return "🌫️"
+    elif "haze" in condition:      return "🌫️"
+    else:                          return "🌡️"
+
+
+def celsius_to_fahrenheit(c: float) -> float:
+    return round((c * 9/5) + 32, 1)
+
+
+def get_weather(city: str):
     try:
         response = requests.get(BASE_URL, params={
-            "q": city,
+            "q":     city,
             "appid": API_KEY,
-            "units": "metric"  # celsius
+            "units": "metric"
         })
 
         data = response.json()
 
         if data["cod"] != 200:
-            print(f"❌ Error: {data['message']}")
+            console.print(f"\n  [red]❌ {data['message'].title()}[/red]\n")
             return
 
-        # extract info
-        name        = data["name"]
-        country     = data["sys"]["country"]
-        temp        = data["main"]["temp"]
-        feels_like  = data["main"]["feels_like"]
-        humidity    = data["main"]["humidity"]
-        condition   = data["weather"][0]["description"]
-        wind_speed  = data["wind"]["speed"]
+        name       = data["name"]
+        country    = data["sys"]["country"]
+        temp_c     = data["main"]["temp"]
+        feels_c    = data["main"]["feels_like"]
+        temp_f     = celsius_to_fahrenheit(temp_c)
+        feels_f    = celsius_to_fahrenheit(feels_c)
+        humidity   = data["main"]["humidity"]
+        condition  = data["weather"][0]["description"]
+        wind_speed = data["wind"]["speed"]
+        emoji      = get_weather_emoji(condition)
 
-        # display
-        print(f"\n📍 {name}, {country}")
-        print(f"🌤  Condition  : {condition.title()}")
-        print(f"🌡  Temperature: {temp}°C (Feels like {feels_like}°C)")
-        print(f"💧 Humidity   : {humidity}%")
-        print(f"💨 Wind Speed : {wind_speed} m/s")
-        print()
+        console.print(f"\n  [bold white]{name}, {country}[/bold white]")
+        console.print(f"  [dim]──────────────[/dim]")
+        console.print(f"  {emoji}  [cyan]{condition.title()}[/cyan]")
+        console.print(f"  [bold yellow]{temp_c}°C[/bold yellow] · [yellow]{temp_f}°F[/yellow]  [dim]Feels like {feels_c}°C[/dim]")
+        console.print(f"  💧 [blue]{humidity}%[/blue]   💨 [green]{wind_speed} m/s[/green]")
+        console.print()
 
     except Exception as e:
-        print(f"❌ Something went wrong: {e}")
+        console.print(f"  [red]❌ Something went wrong: {e}[/red]")
 
 
 def main():
-    print("=" * 40)
-    print("   🌤  PyWeather — Day 1")
-    print("=" * 40)
+    console.print()
+    console.print("  [bold cyan]PyWeather[/bold cyan]  [dim]——  Your simple weather app[/dim]")
+    console.print("  [dim]────────────────────────────[/dim]")
 
     while True:
-        city = input("\nEnter city name (or 'quit' to exit): ").strip()
+        city = input("\n  Enter city (or 'quit' to exit): ").strip()
         if city.lower() == "quit":
-            print("👋 Goodbye!")
+            console.print("\n  [cyan]👋 Goodbye![/cyan]\n")
             break
         if not city:
-            print("❌ Please enter a city name.")
+            console.print("  [red]❌ Please enter a city name.[/red]")
             continue
         get_weather(city)
 
